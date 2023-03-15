@@ -10,7 +10,9 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 
 	"github.com/cometbft/cometbft/crypto"
+	"github.com/cometbft/cometbft/crypto/bn254"
 	"github.com/cometbft/cometbft/crypto/ed25519"
+	"github.com/cometbft/cometbft/crypto/secp256k1"
 	cmtbytes "github.com/cometbft/cometbft/libs/bytes"
 	cmtjson "github.com/cometbft/cometbft/libs/json"
 	cmtos "github.com/cometbft/cometbft/libs/os"
@@ -170,7 +172,23 @@ func NewFilePV(privKey crypto.PrivKey, keyFilePath, stateFilePath string) *FileP
 // GenFilePV generates a new validator with randomly generated private key
 // and sets the filePaths, but does not call Save().
 func GenFilePV(keyFilePath, stateFilePath string) *FilePV {
-	return NewFilePV(ed25519.GenPrivKey(), keyFilePath, stateFilePath)
+	return GenFilePVCustom(keyFilePath, stateFilePath, types.ABCIPubKeyTypeEd25519)
+}
+
+// GenFilePVCustom generates a new validator with randomly generated private key
+// for the given key type and sets the filePaths, but does not call Save().
+func GenFilePVCustom(keyFilePath, stateFilePath string, keyType string) *FilePV {
+	switch keyType {
+	case types.ABCIPubKeyTypeSecp256k1:
+		return NewFilePV(secp256k1.GenPrivKey(), keyFilePath, stateFilePath)
+	case types.ABCIPubKeyTypeBn254:
+		return NewFilePV(bn254.GenPrivKey(), keyFilePath, stateFilePath)
+	case types.ABCIPubKeyTypeEd25519:
+		return NewFilePV(ed25519.GenPrivKey(), keyFilePath, stateFilePath)
+	default:
+		cmtos.Exit(fmt.Sprintf("Key type: %s is not supported", keyType))
+		return nil
+	}
 }
 
 // LoadFilePV loads a FilePV from the filePaths.  The FilePV handles double
@@ -232,6 +250,19 @@ func LoadOrGenFilePV(keyFilePath, stateFilePath string) *FilePV {
 		pv = LoadFilePV(keyFilePath, stateFilePath)
 	} else {
 		pv = GenFilePV(keyFilePath, stateFilePath)
+		pv.Save()
+	}
+	return pv
+}
+
+// Given a custom signature scheme, LoadOrGenFilePVCustom loads a FilePV from the given filePaths
+// or else generates a new one and saves it to the filePaths.
+func LoadOrGenFilePVCustom(keyFilePath, stateFilePath string, keyType string) *FilePV {
+	var pv *FilePV
+	if cmtos.FileExists(keyFilePath) {
+		pv = LoadFilePV(keyFilePath, stateFilePath)
+	} else {
+		pv = GenFilePVCustom(keyFilePath, stateFilePath, keyType)
 		pv.Save()
 	}
 	return pv
