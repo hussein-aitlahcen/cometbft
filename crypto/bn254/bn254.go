@@ -88,6 +88,20 @@ func (pubKey PubKey) Bytes() []byte {
 	return pubKey
 }
 
+/*
+   ê(a, b) * ê(c, d) = 1_GT
+
+   (ax, b) (c, d) = (a, xb) (c, d) = (a, b)^x
+
+   secret = sk
+   PK = sk*G1Gen
+   HM = H(m)
+   Sig = sk*HM
+
+   (PK, HM) (-G1Gen, Sig)
+   (sk*G1Gen, HM) (-G1Gen, sk*HM)
+   (G1Gen, HM)^sk (G1Gen, HM)^(-sk) = 1_GT
+ */
 func (pubKey PubKey) VerifySignature(msg []byte, sig []byte) bool {
 	hashedMessage, _ := hashedMessage(msg)
 	var public bn254.G1Affine
@@ -148,37 +162,52 @@ func init() {
 }
 
 /* Loop until we find a valid G2 point derived from:
-   X0=uint256(keccak256(msg || i)))
-   X1=uint256(keccak256(i || msg)))
+   [mask .. 254 ... 0]
+   X0=1 << 256 | (uint256(keccak256(concat(i, msg))) % q)
+   X1=uint256(keccak256(concat(msg, i))) % q
 
    Y0,Y1=Decompress(X0, X1)
 
    Point is then recoverable from the tuple (msg, i, Y0, Y1)
-
 TODO: performance
 */
 func hashedMessage(msg []byte) (bn254.G2Affine, uint32) {
 	var point bn254.G2Affine
 	var i = uint32(0)
+	domain := []byte("CometBLS")
 	b := make([]byte, 4)
 	h := Hash()
 	for {
 		binary.BigEndian.PutUint32(b, i)
 		h.Reset()
+		h.Write(domain)
 		h.Write(b)
 		h.Write(msg)
 		X0 := h.Sum(nil)
 		h.Reset()
+		h.Write(domain)
 		h.Write(msg)
 		h.Write(b)
 		X1 := h.Sum(nil)
-		_, err := point.SetBytes(append(X0, X1...))
+
+		X0e := new(fp.Element).SetBytes(X0)
+		X1e := new(fp.Element).SetBytes(X1)
+		X0b := X0e.Bytes()
+		X1b := X1e.Bytes()
+		Xb := append(X0b[:], X1b[:]...)
+
+		// Ensure we set the compression mask, effectively wiping 1 bit out of the keccak256 output
+		Xb[0] |= 0b10 << 6
+
+		_, err := point.SetBytes(Xb)
 		if err != nil || !point.IsOnCurve() {
-			fmt.Printf("Invalid point at %d\n", i)
 			i++
 			continue
 		}
 		break
 	}
+
+	fmt.Println("Found: ", i, ", ", point)
+
 	return point, i
 }
