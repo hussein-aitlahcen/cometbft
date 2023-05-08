@@ -32,8 +32,8 @@ require (
 	github.com/spf13/viper v1.15.0
 	github.com/stretchr/testify v1.8.2
 	golang.org/x/crypto v0.7.0
-	golang.org/x/net v0.8.0
-	google.golang.org/grpc v1.53.0
+	golang.org/x/net v0.9.0
+	google.golang.org/grpc v1.54.0
 )
 
 require (
@@ -47,7 +47,7 @@ require (
 	github.com/btcsuite/btcd/btcutil v1.1.3
 	github.com/cometbft/cometbft-db v0.7.0
 	github.com/consensys/gnark-crypto v0.9.1-0.20230127122953-83736ef21d69
-	github.com/cosmos/gogoproto v1.4.6
+	github.com/cosmos/gogoproto v1.4.9
 	github.com/go-git/go-git/v5 v5.6.0
 	github.com/gofrs/uuid v4.4.0+incompatible
 	github.com/google/uuid v1.3.0
@@ -55,7 +55,7 @@ require (
 	github.com/vektra/mockery/v2 v2.22.1
 	golang.org/x/sync v0.1.0
 	gonum.org/v1/gonum v0.12.0
-	google.golang.org/protobuf v1.29.1
+	google.golang.org/protobuf v1.30.0
 )
 
 require (
@@ -281,9 +281,9 @@ require (
 	golang.org/x/exp v0.0.0-20230307190834-24139beb5833 // indirect
 	golang.org/x/exp/typeparams v0.0.0-20230203172020-98cc5a0785f9 // indirect
 	golang.org/x/mod v0.9.0 // indirect
-	golang.org/x/sys v0.6.0 // indirect
-	golang.org/x/term v0.6.0 // indirect
-	golang.org/x/text v0.8.0 // indirect
+	golang.org/x/sys v0.7.0 // indirect
+	golang.org/x/term v0.7.0 // indirect
+	golang.org/x/text v0.9.0 // indirect
 	golang.org/x/tools v0.7.0 // indirect
 	google.golang.org/genproto v0.0.0-20230110181048-76db0878b65f // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
